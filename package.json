@@ -1,6 +1,6 @@
 {
-	"name": "cline-chinese",
-	"displayName": "Cline Chinese",
+	"name": "cline-chinese-edu",
+	"displayName": "Cline Chinese Edu",
 	"description": "%cline.description%",
 	"version": "3.86.6",
 	"icon": "assets/icons/icon.png",
@@ -14,7 +14,7 @@
 		"name": "HybridTalentComputing"
 	},
 	"license": "Apache-2.0",
-	"publisher": "HybridTalentComputing",
+	"publisher": "cline",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/HybridTalentComputing/cline-chinese"
