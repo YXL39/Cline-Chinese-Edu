@@ -37,7 +37,6 @@ export const CompletionOutputRow = memo(
 		messageTs,
 		handleQuoteClick,
 	}: CompletionOutputRowProps) => {
-		const { t } = useTranslation("common")
 		return (
 			<div>
 				<div className="rounded-sm border border-success/20 overflow-visible bg-success/10 p-2 pt-3">
@@ -45,7 +44,6 @@ export const CompletionOutputRow = memo(
 					<div className={cn(headClassNames, "justify-between px-1")}>
 						<div className="flex gap-2 items-center">
 							<CheckIcon className="size-3 text-success" />
-							<span className="text-success font-bold">{t("completionOutput.taskCompleted")}</span>
 						</div>
 						<CopyButton className="text-success" textToCopy={text} />
 					</div>

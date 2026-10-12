@@ -347,10 +347,8 @@ export const ChatRowContent = memo(
 						</span>,
 					]
 				case "completion_result":
-					return [
-						<span className="codicon codicon-check text-success mb-[-1.5px]" />,
-						<span className="text-success font-bold">{t("chatRow.taskCompleted")}</span>,
-					]
+					// 教育版：仅保留勾选图标，不显示"任务已完成"文字
+					return [<span className="codicon codicon-check text-success mb-[-1.5px]" />]
 				case "api_req_started":
 					// API request rows no longer render the request payload/cost accordion.
 					// Thinking/reasoning is handled directly in the api_req_started renderer below.
