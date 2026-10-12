@@ -54,7 +54,6 @@ import { CommandOutputContent, CommandOutputRow } from "./CommandOutputRow"
 import { CompletionOutputRow } from "./CompletionOutputRow"
 import { DiffEditRow } from "./DiffEditRow"
 import ErrorRow from "./ErrorRow"
-import { FeatureTip } from "./FeatureTip"
 import HookMessage from "./HookMessage"
 import { MarkdownRow } from "./MarkdownRow"
 import NewTaskPreview from "./NewTaskPreview"
@@ -157,7 +156,6 @@ export const ChatRowContent = memo(
 			onRelinquishControl,
 			vscodeTerminalExecutionMode,
 			clineMessages,
-			showFeatureTips,
 		} = useExtensionState()
 		const [seeNewChangesDisabled, setSeeNewChangesDisabled] = useState(false)
 		const [explainChangesDisabled, setExplainChangesDisabled] = useState(false)
@@ -881,8 +879,6 @@ export const ChatRowContent = memo(
 					case "reasoning": {
 						const isReasoningStreaming = message.partial === true
 						const hasReasoningText = !!message.text?.trim()
-						// Show feature tips throughout the entire thinking/reasoning phase
-						const _showFeatureTip = isReasoningStreaming
 						return (
 							<div>
 								<ThinkingRow
@@ -895,7 +891,6 @@ export const ChatRowContent = memo(
 									showTitle={true}
 									title={isReasoningStreaming ? t("chatRow.thinkingDots") : t("chatRow.thinking")}
 								/>
-								{isReasoningStreaming && showFeatureTips !== false && <FeatureTip />}
 							</div>
 						)
 					}
