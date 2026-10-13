@@ -1,5 +1,6 @@
 import type { EduStudentProfile } from "@shared/EduStudentProfile"
 import {
+	EduSchoolProgress as EduSchoolProgressProto,
 	EduStudentProfile as EduStudentProfileProto,
 	EduStudentProfileRequest,
 	EduSubjectInfo as EduSubjectInfoProto,
@@ -62,6 +63,17 @@ const EduOnboardingView = ({ initialProfile, compact = false, onSaved }: EduOnbo
 		setSubjects((prev) => prev.filter((_, i) => i !== index))
 	}
 
+	/** 保存时保留同学科的 v2 学校进度（schoolProgress 由聊天页「推进」按钮维护） */
+	const pickSchoolProgress = (s: SubjectRow) => {
+		const sp = initialProfile?.subjects.find((o) => o.subject === s.subject && o.version === s.version)?.schoolProgress
+		return sp
+			? EduSchoolProgressProto.create({
+					current: sp.current || "",
+					completedUnits: sp.completedUnits || [],
+				})
+			: undefined
+	}
+
 	const handleSave = async () => {
 		if (subjects.length === 0) {
 			setError("请至少保留一个科目")
@@ -81,6 +93,7 @@ const EduOnboardingView = ({ initialProfile, compact = false, onSaved }: EduOnbo
 								subject: s.subject,
 								version: s.version,
 								customVersion: s.version === "custom" ? s.customVersion : undefined,
+								schoolProgress: pickSchoolProgress(s),
 							}),
 						),
 					}),
@@ -94,6 +107,8 @@ const EduOnboardingView = ({ initialProfile, compact = false, onSaved }: EduOnbo
 					subject: s.subject,
 					version: s.version,
 					customVersion: s.version === "custom" ? s.customVersion : undefined,
+					schoolProgress: initialProfile?.subjects.find((o) => o.subject === s.subject && o.version === s.version)
+						?.schoolProgress,
 				})),
 				completedAt: Date.now(),
 			}

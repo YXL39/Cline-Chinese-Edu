@@ -7,10 +7,11 @@ import { normalizeApiConfiguration } from "@/components/settings/utils/providerU
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { cn } from "@/lib/utils"
 import { getEnvironmentColor } from "@/utils/environmentColors"
+import BackToMainChatButton from "./buttons/BackToMainChatButton"
 import CopyTaskButton from "./buttons/CopyTaskButton"
 import DeleteTaskButton from "./buttons/DeleteTaskButton"
-import NewTaskButton from "./buttons/NewTaskButton"
 import OpenDiskConversationHistoryButton from "./buttons/OpenDiskConversationHistoryButton"
+import SubChatButton from "./buttons/SubChatButton"
 import { CheckpointError } from "./CheckpointError"
 import ContextWindow from "./ContextWindow"
 import { FocusChain } from "./FocusChain"
@@ -158,7 +159,13 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 						)}
 					</div>
 					<div className="inline-flex items-center justify-end select-none shrink-0">
-						<NewTaskButton className={BUTTON_CLASS} onClick={onClose} />
+						{currentTaskItem?.isSubChat ? (
+							// Cline Chinese Edu: 子聊天 → 返回主聊天
+							<BackToMainChatButton className={BUTTON_CLASS} />
+						) : (
+							// Cline Chinese Edu: 主聊天 → 打开子聊天（替代原「新任务」按钮，保持单主聊天）
+							<SubChatButton className={BUTTON_CLASS} />
+						)}
 					</div>
 				</div>
 

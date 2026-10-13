@@ -74,6 +74,8 @@ export async function newTask(controller: Controller, request: NewTaskRequest): 
 		}).filter(([_, value]) => value !== undefined),
 	)
 
-	const taskId = await controller.initTask(request.text, request.images, request.files, undefined, filteredTaskSettings)
+	// Cline Chinese Edu: variant === "sub" 创建子聊天（常识速问，受限提示词），不出现在任务历史中
+	const variant = request.variant === "sub" ? "sub" : undefined
+	const taskId = await controller.initTask(request.text, request.images, request.files, undefined, filteredTaskSettings, variant)
 	return String.create({ value: taskId || "" })
 }

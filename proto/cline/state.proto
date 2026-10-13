@@ -38,12 +38,35 @@ service StateService {
   rpc testOtelConnection(EmptyRequest) returns (TestConnectionResult);
   rpc testPromptUploading(EmptyRequest) returns (TestConnectionResult);
   rpc saveEduStudentProfile(EduStudentProfileRequest) returns (Empty);
+  // Cline Chinese Edu: 推进某学科的学校进度（旧当前单元归档到复习区）
+  rpc advanceEduSchoolProgress(EduSchoolProgressRequest) returns (Empty);
+}
+
+// Cline Chinese Edu: 学校进度（由学生通过聊天页「推进」按钮维护，AI 只读；
+// 仅当学生自述明显推错且证据充分时，AI 可直接编辑 profile.json 修正）
+message EduSchoolProgress {
+  // 学校当前讲到哪里
+  string current = 1;
+  // 本学期已学单元（推进时归档的旧当前单元）
+  repeated string completed_units = 2;
+}
+
+// Cline Chinese Edu: 推进学校进度请求
+message EduSchoolProgressRequest {
+  // 学科名（如「数学」）
+  string subject = 1;
+  // 版本 key（如 "people"）；custom 时配合 customVersion 描述
+  string version = 2;
+  // 新的「学校当前讲到」位置
+  string new_current = 3;
 }
 
 message EduSubjectInfo {
   string subject = 1;
   string version = 2;
   optional string custom_version = 3;
+  // Cline Chinese Edu v2: 学校进度（当前讲到哪里 + 本学期已学单元）
+  optional EduSchoolProgress school_progress = 4;
 }
 
 message EduStudentProfile {

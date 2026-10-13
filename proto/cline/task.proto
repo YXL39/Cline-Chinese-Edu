@@ -51,6 +51,8 @@ message NewTaskRequest {
   repeated string images = 3;
   repeated string files = 4;
   optional Settings task_settings = 5;
+  // Cline Chinese Edu: "sub" = 子聊天（常识速问，受限提示词与工具白名单）；缺省 "main"
+  optional string variant = 6;
 }
 
 // Request message for toggling task favorite status

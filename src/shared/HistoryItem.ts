@@ -17,4 +17,6 @@ export type HistoryItem = {
 	checkpointManagerErrorMessage?: string
 
 	modelId?: string
+	/** Cline Chinese Edu: 子聊天任务（常识速问），不出现在任务历史中 */
+	isSubChat?: boolean
 }

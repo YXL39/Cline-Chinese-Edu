@@ -32,6 +32,12 @@ export async function saveEduStudentProfile(controller: Controller, request: Edu
 			subject: s.subject,
 			version: s.version || "people",
 			customVersion: s.customVersion,
+			schoolProgress: s.schoolProgress
+				? {
+						current: s.schoolProgress.current || "",
+						completedUnits: s.schoolProgress.completedUnits ?? [],
+					}
+				: undefined,
 		})),
 	})
 

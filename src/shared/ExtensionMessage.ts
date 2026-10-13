@@ -42,6 +42,10 @@ export interface ExtensionState {
 	welcomeViewCompleted: boolean
 	// Cline Chinese Edu: 当前工作区的学生档案（未完成时为 undefined）
 	eduStudentProfile?: EduStudentProfile
+	// Cline Chinese Edu v2: 学习进度（progress.json 规范化后的 JSON 字符串，未初始化时缺省）
+	eduProgress?: string
+	// Cline Chinese Edu: 最近一个「主聊天」任务 ID（不含子聊天），用于重开时自动续接
+	eduLastMainTaskId?: string
 	onboardingModels: OnboardingModelGroup | undefined
 	apiConfiguration?: ApiConfiguration
 	autoApprovalSettings: AutoApprovalSettings

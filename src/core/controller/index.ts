@@ -24,7 +24,7 @@ import open from "open"
 import pWaitFor from "p-wait-for"
 import * as path from "path"
 import { ClineEnv } from "@/config"
-import { readEduProfile } from "@/core/edu/eduDataFiles"
+import { readEduProfile, readEduProgress } from "@/core/edu/eduDataFiles"
 import type { FolderLockWithRetryResult } from "@/core/locks/types"
 import { HostProvider } from "@/hosts/host-provider"
 import { ExtensionRegistryInfo } from "@/registry"
@@ -225,6 +225,7 @@ export class Controller {
 		files?: string[],
 		historyItem?: HistoryItem,
 		taskSettings?: Partial<Settings>,
+		taskVariant?: "main" | "sub",
 	) {
 		// Fire-and-forget: We intentionally don't await fetchRemoteConfig here.
 		// Remote config is already fetched in startRemoteConfigTimer() which runs in the constructor,
@@ -316,6 +317,7 @@ export class Controller {
 			historyItem,
 			taskId,
 			taskLockAcquired,
+			taskVariant,
 		})
 
 		if (historyItem) {
@@ -890,6 +892,11 @@ export class Controller {
 
 		// Cline Chinese Edu: 从工作区隐藏数据目录读取学生档案（目录解析与保存端保持一致）
 		const eduStudentProfile = await readEduProfile(await this.getEduDataCwd())
+		// Cline Chinese Edu v2: 学习进度（progress.json 规范化 v2 结构）+ 最近主聊天任务（重开自动续接）
+		const eduProgressData = await readEduProgress(await this.getEduDataCwd())
+		const eduLastMainTaskId = (taskHistory || [])
+			.filter((item) => !item.isSubChat && item.ts && item.task)
+			.sort((a, b) => b.ts - a.ts)[0]?.id
 
 		const customPrompt = this.stateManager.getGlobalSettingsKey("customPrompt")
 		const mcpResponsesCollapsed = this.stateManager.getGlobalStateKey("mcpResponsesCollapsed")
@@ -916,7 +923,7 @@ export class Controller {
 		const checkpointManagerErrorMessage = this.task?.taskState.checkpointManagerErrorMessage
 
 		const processedTaskHistory = (taskHistory || [])
-			.filter((item) => item.ts && item.task)
+			.filter((item) => item.ts && item.task && !item.isSubChat) // 子聊天任务不进入任务历史
 			.sort((a, b) => b.ts - a.ts)
 			.slice(0, 100) // for now we're only getting the latest 100 tasks, but a better solution here is to only pass in 3 for recent task history, and then get the full task history on demand when going to the task history view (maybe with pagination?)
 
@@ -977,6 +984,8 @@ export class Controller {
 			isNewUser,
 			welcomeViewCompleted,
 			eduStudentProfile,
+			eduProgress: eduProgressData ? JSON.stringify(eduProgressData) : undefined,
+			eduLastMainTaskId,
 			onboardingModels,
 			mcpResponsesCollapsed,
 			terminalOutputLineLimit,

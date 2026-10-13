@@ -24,6 +24,10 @@ export async function getTaskHistory(controller: Controller, request: GetTaskHis
 			if (!hasRequiredFields) {
 				return false
 			}
+			// Cline Chinese Edu: 子聊天（常识速问）不进入任务历史
+			if (item.isSubChat) {
+				return false
+			}
 
 			// Apply favorites filter if requested
 			if (favoritesOnly && !item.isFavorited) {

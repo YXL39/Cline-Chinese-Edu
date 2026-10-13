@@ -10,7 +10,8 @@ import { useMount } from "react-use"
 import { normalizeApiConfiguration } from "@/components/settings/utils/providerUtils"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { useShowNavbar } from "@/context/PlatformContext"
-import { FileServiceClient, UiServiceClient } from "@/services/grpc-client"
+import { FileServiceClient, TaskServiceClient, UiServiceClient } from "@/services/grpc-client"
+import StudyStatusCard from "../edu/StudyStatusCard"
 import { Navbar } from "../menu/Navbar"
 // Import utilities and hooks from the new structure
 import {
@@ -55,9 +56,20 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		currentFocusChainChecklist,
 		focusChainSettings,
 		hooksEnabled,
+		eduLastMainTaskId,
+		currentTaskItem,
 	} = useExtensionState()
 	const isProdHostedApp = userInfo?.apiBaseUrl === "https://app.cline.bot"
 	const shouldShowQuickWins = isProdHostedApp && (!taskHistory || taskHistory.length < QUICK_WINS_HISTORY_THRESHOLD)
+
+	// Cline Chinese Edu: 单主聊天模式 —— 重开扩展时自动续接最近的主聊天任务（不含子聊天）
+	useMount(() => {
+		if (eduLastMainTaskId && !currentTaskItem?.id) {
+			TaskServiceClient.showTaskWithId(StringRequest.create({ value: eduLastMainTaskId })).catch((error) => {
+				console.error("Failed to auto-resume main chat:", error)
+			})
+		}
+	})
 
 	//const task = messages.length > 0 ? (messages[0].say === "task" ? messages[0] : undefined) : undefined) : undefined
 	const task = useMemo(() => messages.at(0), [messages]) // leaving this less safe version here since if the first message is not a task, then the extension is in a bad state and needs to be debugged (see Cline.abort)
@@ -329,6 +341,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		<ChatLayout isHidden={isHidden}>
 			<div className="flex flex-col flex-1 overflow-hidden">
 				{showNavbar && <Navbar />}
+				{/* Cline Chinese Edu: 学习状态卡片（学校进度 / 超前学 / 复习 + 推进按钮） */}
+				<StudyStatusCard />
 				{task ? (
 					<TaskSection
 						apiMetrics={apiMetrics}

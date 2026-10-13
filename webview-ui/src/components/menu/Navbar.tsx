@@ -1,9 +1,8 @@
-import { HistoryIcon, PlusIcon, SettingsIcon, UserCircleIcon } from "lucide-react"
+import { SettingsIcon, UserCircleIcon } from "lucide-react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { TaskServiceClient } from "@/services/grpc-client"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 
 // Custom MCP Server Icon component using VSCode codicon
@@ -16,37 +15,18 @@ const McpServerIcon = ({ className, size }: { className?: string; size?: number 
 
 export const Navbar = () => {
 	const { t } = useTranslation("misc")
-	const { navigateToHistory, navigateToSettings, navigateToAccount, navigateToMcp, navigateToChat } = useExtensionState()
+	const { navigateToSettings, navigateToAccount, navigateToMcp } = useExtensionState()
 
 	const SETTINGS_TABS = useMemo(
 		() => [
-			{
-				id: "chat",
-				name: "Chat",
-				tooltip: t("navbar.newTask"),
-				icon: PlusIcon,
-				navigate: () => {
-					// Close the current task, then navigate to the chat view
-					TaskServiceClient.clearTask({})
-						.catch((error) => {
-							console.error("Failed to clear task:", error)
-						})
-						.finally(() => navigateToChat())
-				},
-			},
+			// Cline Chinese Edu: 单主聊天模式 —— 隐藏「新任务」与「任务历史」入口，
+			// 所有主交互收敛到自动续接的主聊天；子聊天由任务头部的「子聊天」按钮进入。
 			{
 				id: "mcp",
 				name: "MCP",
 				tooltip: t("navbar.mcpServers"),
 				icon: McpServerIcon,
 				navigate: navigateToMcp,
-			},
-			{
-				id: "history",
-				name: "History",
-				tooltip: t("navbar.history"),
-				icon: HistoryIcon,
-				navigate: navigateToHistory,
 			},
 			{
 				id: "account",
@@ -63,7 +43,7 @@ export const Navbar = () => {
 				navigate: navigateToSettings,
 			},
 		],
-		[navigateToAccount, navigateToChat, navigateToHistory, navigateToMcp, navigateToSettings, t],
+		[navigateToAccount, navigateToMcp, navigateToSettings, t],
 	)
 
 	return (

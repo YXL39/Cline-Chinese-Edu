@@ -155,6 +155,8 @@ type TaskParams = {
 	historyItem?: HistoryItem
 	taskId: string
 	taskLockAcquired: boolean
+	// Cline Chinese Edu: "sub" = 子聊天（常识速问）；缺省主聊天
+	taskVariant?: "main" | "sub"
 }
 
 export class Task {
@@ -264,6 +266,9 @@ export class Task {
 	// Task Locking (Sqlite)
 	private taskLockAcquired: boolean
 
+	// Cline Chinese Edu: 任务变体（main=主聊天 / sub=常识速问子聊天）
+	private taskVariant: "main" | "sub" = "main"
+
 	// Command executor for running shell commands (extracted from executeCommandTool)
 	private commandExecutor!: CommandExecutor
 	private isRemoteWorkspaceEnvironment = false
@@ -294,6 +299,7 @@ export class Task {
 			historyItem,
 			taskId,
 			taskLockAcquired,
+			taskVariant,
 		} = params
 
 		this.taskInitializationStartTime = performance.now()
@@ -311,7 +317,13 @@ export class Task {
 			})
 		this.controller = controller
 		this.mcpHub = mcpHub
-		this.updateTaskHistory = updateTaskHistory
+		// Cline Chinese Edu: 子聊天变体；从历史恢复时继承历史条目的 sub-chat 标记
+		this.taskVariant = taskVariant === "sub" || historyItem?.isSubChat ? "sub" : "main"
+		// 子聊天任务在任务历史中标记 isSubChat（宿主端据此隐藏子聊天历史条目）
+		this.updateTaskHistory =
+			this.taskVariant === "sub"
+				? (item) => updateTaskHistory({ ...item, isSubChat: true })
+				: updateTaskHistory
 		this.postStateToWebview = postStateToWebview
 		this.reinitExistingTaskFromId = reinitExistingTaskFromId
 		this.cancelTask = cancelTask
@@ -1981,8 +1993,8 @@ Speak in ${languageInstructionMap[preferredLanguage] || preferredLanguage}.`
 			visible: visibleTabPaths.slice(0, cap),
 		}
 
-		// Cline Chinese Edu: 加载学生档案，构建学习上下文并注入系统提示
-		const studyContextInstructions = await buildStudyContextInstructions(this.cwd)
+		// Cline Chinese Edu: 加载学生档案，构建学习上下文并注入系统提示（sub 变体使用受限的子聊天指令）
+		const studyContextInstructions = await buildStudyContextInstructions(this.cwd, this.taskVariant)
 
 		const promptContext: SystemPromptContext = {
 			cwd: this.cwd,
