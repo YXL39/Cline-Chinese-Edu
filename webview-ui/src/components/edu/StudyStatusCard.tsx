@@ -14,7 +14,7 @@ import { StateServiceClient } from "@/services/grpc-client"
  */
 const StudyStatusCard = () => {
 	const { eduStudentProfile, eduProgress } = useExtensionState()
-	const [expanded, setExpanded] = useState(true)
+	const [expanded, setExpanded] = useState(false)
 	const [advancingSubject, setAdvancingSubject] = useState<string | null>(null)
 	const [advanceValue, setAdvanceValue] = useState("")
 	const [advancing, setAdvancing] = useState(false)
@@ -45,7 +45,7 @@ const StudyStatusCard = () => {
 	const confirmAdvance = async (subject: EduSubjectInfo) => {
 		const value = advanceValue.trim()
 		if (!value) {
-			setError("请填写学校当前讲到的位置")
+			setError("请填写新的讲到位置")
 			return
 		}
 		setAdvancing(true)
@@ -95,9 +95,6 @@ const StudyStatusCard = () => {
 								<div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
 									<span className="font-medium">{label}</span>
 									<span className="text-muted-foreground">
-										学校：{sp?.current ? sp.current : "未设置"}
-									</span>
-									<span className="text-muted-foreground">
 										超前：{prog?.ahead?.current ? prog.ahead.current : "未开始"}
 									</span>
 									{pendingReview > 0 && (
@@ -107,7 +104,7 @@ const StudyStatusCard = () => {
 									)}
 									{!isAdvancing && (
 										<Button
-											aria-label={`推进 ${label} 学校进度`}
+											aria-label={`推进 ${label} 进度`}
 											className="ml-auto h-5 gap-1 rounded px-1.5 py-0 text-[11px]"
 											onClick={() => {
 												setAdvancingSubject(s.subject)
@@ -134,7 +131,7 @@ const StudyStatusCard = () => {
 														void confirmAdvance(s)
 													}
 												}}
-												placeholder="新的学校讲到位置（如：七年级上册·第四章 相交线与平行线）"
+												placeholder="新的讲到位置（如：七年级上册·第四章 相交线与平行线）"
 												value={advanceValue}
 											/>
 											<Button
@@ -154,7 +151,7 @@ const StudyStatusCard = () => {
 											</Button>
 										</div>
 										<div className="text-[11px] text-muted-foreground">
-											推进后，旧的「学校当前」会自动归入本学期已学（进入复习区）
+											推进后，旧的「当前讲到位置」会自动归入本学期已学（进入复习区）
 										</div>
 										{error && <div className="text-[11px] text-red-400">{error}</div>}
 									</div>
