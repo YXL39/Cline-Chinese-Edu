@@ -6,6 +6,7 @@ import { EduStudentProfile } from "@shared/EduStudentProfile"
 import {
 	advanceEduSchoolProgressData,
 	buildStudyContextInstructions,
+	getStudyModeInstructions,
 	normalizeEduProgress,
 	readEduProfile,
 	readEduProgress,
@@ -117,6 +118,13 @@ describe("eduDataFiles（Cline Chinese Edu v2 数据层）", () => {
 		assert.ok(main.includes("examReview（大考超级复习）为占位能力"))
 		// 证据充分时允许 AI 修正学校进度（走自动批准）
 		assert.ok(main.includes("直接编辑"))
+		// 两种学习模式（复习 / 超前学）定义
+		assert.ok(main.includes("两种学习模式"))
+		assert.ok(main.includes("复习模式（PLAN MODE）"))
+		assert.ok(main.includes("超前学模式（ACT MODE）"))
+		// 超前学定义已修正：学校讲到后不再算超前学，且不再自相矛盾
+		assert.ok(main.includes("不再算超前学"))
+		assert.ok(!main.includes("不要超前学学校尚未讲到的内容"))
 
 		const sub = await buildStudyContextInstructions(cwd, "sub")
 		assert.ok(sub)
@@ -130,5 +138,25 @@ describe("eduDataFiles（Cline Chinese Edu v2 数据层）", () => {
 		const cwd = makeWorkspace("edu-v2-empty-ws")
 		assert.equal(await buildStudyContextInstructions(cwd, "main"), undefined)
 		assert.equal(await buildStudyContextInstructions(cwd, "sub"), undefined)
+	})
+
+	it("getStudyModeInstructions：有档案时返回复习 / 超前学模式指令；无档案返回 undefined", async () => {
+		const cwd = makeWorkspace("edu-v2-mode-prompt-ws")
+		await writeEduProfile(cwd, profile())
+
+		const planText = await getStudyModeInstructions(cwd, "plan")
+		assert.ok(planText)
+		assert.ok(planText.includes("复习模式"))
+		assert.ok(planText.includes("plan_mode_respond"))
+		assert.ok(planText.includes("不修改学校进度"))
+
+		const actText = await getStudyModeInstructions(cwd, "act")
+		assert.ok(actText)
+		assert.ok(actText.includes("超前学模式"))
+		assert.ok(actText.includes("ahead.completed"))
+
+		const emptyCwd = makeWorkspace("edu-v2-mode-prompt-empty-ws")
+		assert.equal(await getStudyModeInstructions(emptyCwd, "plan"), undefined)
+		assert.equal(await getStudyModeInstructions(emptyCwd, "act"), undefined)
 	})
 })

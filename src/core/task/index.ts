@@ -79,7 +79,7 @@ import Mutex from "p-mutex"
 import pWaitFor from "p-wait-for"
 import * as path from "path"
 import { ulid } from "ulid"
-import { buildStudyContextInstructions } from "@/core/edu/eduDataFiles"
+import { buildStudyContextInstructions, getStudyModeInstructions } from "@/core/edu/eduDataFiles"
 import type { SystemPromptContext } from "@/core/prompts/system-prompt"
 import { getSystemPrompt } from "@/core/prompts/system-prompt"
 import { HostProvider } from "@/hosts/host-provider"
@@ -3793,10 +3793,12 @@ Speak in ${languageInstructionMap[preferredLanguage] || preferredLanguage}.`
 
 		details += "\n\n# Current Mode"
 		const mode = this.stateManager.getGlobalSettingsKey("mode")
+		// Cline Chinese Edu: 主聊天存在学生档案时，模式按钮为「复习 / 超前学」，使用教育模式指令替代默认 PLAN / ACT 说明
+		const studyModeInstructions = this.taskVariant !== "sub" ? await getStudyModeInstructions(this.cwd, mode) : undefined
 		if (mode === "plan") {
-			details += `\nPLAN MODE\n${formatResponse.planModeInstructions()}`
+			details += studyModeInstructions ?? `\nPLAN MODE\n${formatResponse.planModeInstructions()}`
 		} else {
-			details += "\nACT MODE"
+			details += studyModeInstructions ?? "\nACT MODE"
 		}
 
 		return `<environment_details>\n${details.trim()}\n</environment_details>`

@@ -8,6 +8,7 @@ import {
 	type EduSubjectProgress,
 	eduSubjectLabel,
 } from "@shared/EduStudentProfile"
+import type { Mode } from "@/shared/storage/types"
 
 /** 工作区内的隐藏数据目录名 */
 export const EDU_DIR_NAME = ".cline-chinese-edu"
@@ -343,11 +344,33 @@ export async function buildStudyContextInstructions(cwd?: string, variant?: "mai
 		"## 学习数据自动维护要求",
 		`与这位学生交流时，你需要自动维护工作区根目录 ${EDU_DIR_NAME}/ 下的学习数据文件：`,
 		`1. 学生解题出错或暴露知识薄弱点时，向 mistake.json 的 entries 追加一条记录（含 subject、topic、summary、date 字段），并更新 updatedAt；同时在 progress.json 对应科目的 review 中追加 { topic: 错题摘要, scope: "mistake", status: "pending" }。`,
-		`2. 超前学内容（学校进度之后的内容）讲解 / 练习完成后，把内容写入 progress.json 对应科目的 ahead.completed（去重），并更新 ahead.current；不要超前学学校尚未讲到的内容。`,
+		`2. 超前学内容（即本册教材内、学校当前进度之后的内容）讲解 / 练习完成后，把内容写入 progress.json 对应科目的 ahead.completed（去重），并更新 ahead.current；学校后来在课上讲到该内容时，它归入学校进度线，不再算超前学；不要超前学超出本册教材的内容。`,
 		`3. 复习提问覆盖 review 中 status=pending 的条目：scope=unit（本学期已学，学生推进学校进度时自动入队）与 scope=mistake（错题）；学生明显掌握后把对应条目标记 done。`,
 		`4. examReview（大考超级复习）为占位能力，当前未启用；未经学生要求不要组织期末 / 毕业大考总复习。`,
 		`5. 更新前必须先读取文件现有内容，采用合并方式保留历史记录，不要覆盖或删除已有条目。`,
 		`6. 不确定某条记录是否成立时，先向学生确认。`,
+		"",
+		"## 两种学习模式（聊天页底部的「复习」/「超前学」按钮）",
+		"聊天页底部的两个模式按钮对应系统提示中的 PLAN MODE / ACT MODE，在本应用中用作两种学习场景：",
+		"- 复习模式（PLAN MODE）：只做复习，不讲解新的超前学内容。围绕 progress.json 的 review 中 status=pending 的条目（scope=unit 为已学单元、scope=mistake 为错题）与 mistake.json 的错题做提问巩固；与学生对话时直接使用 plan_mode_respond 工具回复。学生明显掌握某条待复习内容后，把对应 review 条目标记 done（这是复习模式下唯一允许的学习数据文件写操作，写入前先读取文件、合并更新）。不修改学校进度。",
+		"- 超前学模式（ACT MODE）：讲解 / 练习学校当前进度之后的内容（限于本册教材；学校已讲的内容归学校进度线，不属于超前学）。超前学内容讲完 / 练完即写入 ahead.completed 并更新 ahead.current；学生出错按上述规则记录。",
+		"本节模式规则优先于系统提示中关于 PLAN MODE / ACT MODE 的一般性说明。",
 	]
 	return lines.join("\n")
+}
+
+/**
+ * 每轮「当前模式」指令（注入 environment_details）：
+ * - 无学生档案时返回 undefined，调用方回退到 Cline 默认的 PLAN / ACT 说明；
+ * - 有档案时返回与当前模式对应的「复习 / 超前学」模式指令。
+ */
+export async function getStudyModeInstructions(cwd: string | undefined, mode: Mode): Promise<string | undefined> {
+	const profile = await readEduProfile(cwd)
+	if (!profile) {
+		return undefined
+	}
+	if (mode === "plan") {
+		return `\n复习模式（REVIEW MODE / PLAN MODE）\n当前为「复习」模式：只做复习，不讲解新的超前学内容。围绕 progress.json 的 review 中 status=pending 条目与 mistake.json 的错题做提问巩固；回复学生请使用 plan_mode_respond 工具。学生明显掌握某条后，把对应 review 条目标记 done（复习模式下唯一允许的学习数据文件写操作；写入前先读取文件现有内容、合并更新）。不修改学校进度。`
+	}
+	return `\n超前学模式（AHEAD-LEARNING MODE / ACT MODE）\n当前为「超前学」模式：讲解 / 练习学校当前进度之后的内容（限于本册教材；学校已讲的内容不属于超前学）。超前学内容讲完 / 练完即把内容写入 progress.json 对应科目的 ahead.completed（去重）并更新 ahead.current；学生出错时按学习数据维护规则记录 mistake.json 与复习区。`
 }
